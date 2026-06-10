@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 
-class ElementosUiScreen extends StatelessWidget {
+class ElementosUiScreen extends StatefulWidget {
   const ElementosUiScreen({super.key});
+
+  @override
+  State<ElementosUiScreen> createState() => _ElementosUiScreenState();
+}
+
+class _ElementosUiScreenState extends State<ElementosUiScreen> {
+  // Variables de Control de Estado (Fase 4)
+  double _fontSize = 32.0;
+  bool _isBold = false;
+  bool _isItalic = false;
+  TextAlign _alignmentText = TextAlign.center;
+  Color _colorTexto = Colors.blue;
 
   @override
   Widget build(BuildContext context) {
@@ -16,22 +28,25 @@ class ElementosUiScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // TEXT PRINCIPAL ("Hola Flutter")
-            const Expanded(
-              child: Center(
+            // ÁREA DE VISUALIZACIÓN (Texto reactivo a los controles inferiores)
+            Expanded(
+              child: Container(
+                alignment: Alignment.center,
+                width: double.infinity,
                 child: Text(
                   'Hola Flutter',
+                  textAlign: _alignmentText,
                   style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.normal,
-                    color: Colors.blue,
+                    fontSize: _fontSize,
+                    fontWeight: _isBold ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: _isItalic ? FontStyle.italic : FontStyle.normal,
+                    color: _colorTexto,
                   ),
                 ),
               ),
             ),
 
-            // COLUMN DE CONTROLES (DENTRO DE UNA CARD ESTILIZADA)
+            // COLUMN DE CONTROLES REACTIVOS
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
@@ -40,60 +55,83 @@ class ElementosUiScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ROW 1: SLIDER FONT SIZE
-                    const Text('fontSize: 32', style: TextStyle(fontWeight: FontWeight.w500)),
+                    // ROW 1: SLIDER DE TAMAÑO DE FUENTE
+                    Text('fontSize: ${_fontSize.toInt()}', style: const TextStyle(fontWeight: FontWeight.w500)),
                     Row(
                       children: [
                         Expanded(
-                          child: Slider(value: 32.0, min: 16, max: 60, onChanged: (val) {}),
+                          child: Slider(
+                            value: _fontSize,
+                            min: 16,
+                            max: 60,
+                            onChanged: (val) {
+                              setState(() {
+                                _fontSize = val;
+                              });
+                            },
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
 
-                    // ROW 2: SWITCHES DE ESTILO
+                    // ROW 2: INTERRUPTORES DE ESTILO
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Row(
                           children: [
                             const Text('Bold: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                            Switch(value: true, onChanged: (val) {}),
+                            Switch(
+                              value: _isBold,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isBold = val;
+                                });
+                              },
+                            ),
                           ],
                         ),
                         Row(
                           children: [
                             const Text('Italic: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                            Switch(value: false, onChanged: (val) {}),
+                            Switch(
+                              value: _isItalic,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isItalic = val;
+                                });
+                              },
+                            ),
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
 
-                    // ROW 3: ICON BUTTON ALINEACIÓN
+                    // ROW 3: BOTONES DE ALINEACIÓN DE TEXTO
                     const Text('Alineación:', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.format_align_left, color: Colors.blue)),
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.format_align_center, color: Colors.grey)),
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.format_align_right, color: Colors.grey)),
+                        _construirBotonAlineacion(Icons.format_align_left, TextAlign.left),
+                        _construirBotonAlineacion(Icons.format_align_center, TextAlign.center),
+                        _construirBotonAlineacion(Icons.format_align_right, TextAlign.right),
                       ],
                     ),
                     const SizedBox(height: 16),
 
-                    // ROW 4: PALETA DE COLORES (CIRCLE AVATARS)
+                    // ROW 4: PALETA DE SELECCIÓN DE COLOR
                     const Text('Color:', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _construirIndicadorColor(Colors.blue, true),
-                        _construirIndicadorColor(Colors.red, false),
-                        _construirIndicadorColor(Colors.green, false),
-                        _construirIndicadorColor(Colors.amber, false),
+                        _construirBotonColor(Colors.blue),
+                        _construirBotonColor(Colors.red),
+                        _construirBotonColor(Colors.green),
+                        _construirBotonColor(Colors.amber),
                       ],
                     ),
                   ],
@@ -106,17 +144,37 @@ class ElementosUiScreen extends StatelessWidget {
     );
   }
 
-  Widget _construirIndicadorColor(Color color, bool seleccionado) {
-    return Container(
-      padding: const EdgeInsets.all(2.0),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: seleccionado ? Border.all(color: Colors.blue, width: 2) : null,
-      ),
-      child: CircleAvatar(
-        radius: 14,
-        backgroundColor: color,
-        child: seleccionado ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
+  Widget _construirBotonAlineacion(IconData icono, TextAlign alineacionTarget) {
+    final bool seleccionado = _alignmentText == alineacionTarget;
+    return IconButton(
+      icon: Icon(icono, color: seleccionado ? Colors.blue : Colors.grey.shade600),
+      onPressed: () {
+        setState(() {
+          _alignmentText = alineacionTarget;
+        });
+      },
+    );
+  }
+
+  Widget _construirBotonColor(Color colorTarget) {
+    final bool seleccionado = _colorTexto == colorTarget;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _colorTexto = colorTarget;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(2.0),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: seleccionado ? Border.all(color: Colors.blue, width: 2) : null,
+        ),
+        child: CircleAvatar(
+          radius: 14,
+          backgroundColor: colorTarget,
+          child: seleccionado ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
+        ),
       ),
     );
   }
